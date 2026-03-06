@@ -1,0 +1,65 @@
+name: JCasC CI
+
+on:
+  schedule:
+    - cron: '0 5 1 * *'
+  workflow_dispatch:    
+  push:
+    paths-ignore:
+      - '**/*.md'
+
+jobs:
+  jcasc:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Create Jenkins Network
+        run: |
+          docker network create jenkins
+
+      - name: Build Gitea image
+        run: |
+          docker run \
+          --name gitea \
+          --network jenkins \
+          --network-alias gitea \
+          --detach \
+          --restart=unless-stopped \
+          --volume gitea-data:/data \
+          --volume /etc/timezone:/etc/timezone:ro \
+          --volume /etc/localtime:/etc/localtime:ro \
+          --publish 3000:3000 \
+          --publish 2222:2222 \
+          gitea/gitea:1.24
+
+      - name: Establish Gitea's webhooks
+        run: |
+          docker exec gitea bash -c "echo -e '\n[webhook]\nALLOWED_HOST_LIST=jenkins\nDISABLE_WEBHOOKS=false' >> /data/gitea/conf/app.ini"
+          docker restart gitea
+
+      - name: Build Jenkins image
+        run: |
+          docker build -t jenkins:jcasc .
+
+      - name: Run docker image
+        run: |
+          docker run --name jenkins \
+            --network jenkins \
+            --network-alias jenkins \
+            --detach \
+            --restart unless-stopped \
+            --env JENKINS_ADMIN_ID=admin \
+            --env JENKINS_ADMIN_PASSWORD=password \
+            --privileged \
+            --publish 8080:8080 \
+            --publish 50000:50000 \
+            --volume jenkins-data:/var/jenkins_home \
+            --volume /var/run/docker.sock:/var/run/docker.sock \
+            jenkins:jcasc
+
+      - name: Check images
+        run: |
+          docker images

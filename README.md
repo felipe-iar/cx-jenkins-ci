@@ -1,3 +1,5 @@
+[![JCasC CI](https://github.com/iarsystems/cx-jenkins-ci/actions/workflows/autotest.yml/badge.svg)](https://github.com/iarsystems/cx-jenkins-ci/actions/workflows/autotest.yml)
+
 # Jenkins CI with IAR Build Tools
 This repository demonstrates a continuous integration (CI) workflow using IAR Build Tools, Jenkins and Gitea, all running in Docker containers. The [IAR Build Tools](https://iar.com/cx) provide command-line utilities for building and analyzing projects created with IAR Embedded Workbench in headless environments like Jenkins. [Gitea][url-gitea] is a lightweight Git server suitable for containerized deployments, while [Jenkins][url-jenkins] integrates seamlessly with Git providers via plugins.
 
